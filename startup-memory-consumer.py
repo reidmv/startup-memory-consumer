@@ -9,7 +9,7 @@ from threading import Event
 
 def consume_mem(size: int, seconds: int | None = None):
     print(f"Consuming {size} bytes for {seconds} seconds...")
-    buffer = ctypes.create_string_buffer(size)
+    buffer = ctypes.create_string_buffer(int(size))
     if seconds is None:
       Event().wait() # Wait forever
     time.sleep(seconds)
@@ -24,20 +24,20 @@ def mebibytes_to_bytes(mebibytes: int) -> int:
 
 def main() -> int:
     config = {
-      "start_mib": os.getenv("STARTUP_CONSUME_MEBIBYTES", default="512"),
-      "start_sec": os.getenv("STARTUP_CONSUME_SECONDS",   default="1"),
-      "other_mib": os.getenv("RUNTIME_CONSUME_MEBIBYTES", default="4"),
-      "other_sec": os.getenv("RUNTIME_CONSUME_SECONDS",   default=None),
+      "st_mib": os.getenv("STARTUP_CONSUME_MEBIBYTES", default="512"),
+      "st_sec": os.getenv("STARTUP_CONSUME_SECONDS",   default="1"),
+      "rt_mib": os.getenv("RUNTIME_CONSUME_MEBIBYTES", default="4"),
+      "rt_sec": os.getenv("RUNTIME_CONSUME_SECONDS",   default=None),
     }
 
     for key, val in config.items():
         try:
-            config[key] = int(val)
+            config[key] = float(val)
         except:
             config[key] = None
 
-    consume_mem(size=mebibytes_to_bytes(config["start_mib"]), seconds=config["start_sec"])
-    consume_mem(size=mebibytes_to_bytes(config["other_mib"]), seconds=config["other_sec"])
+    consume_mem(size=mebibytes_to_bytes(config["st_mib"]), seconds=config["st_sec"])
+    consume_mem(size=mebibytes_to_bytes(config["rt_mib"]), seconds=config["rt_sec"])
     return 0
 
 
