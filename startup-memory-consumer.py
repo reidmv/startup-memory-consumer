@@ -63,9 +63,9 @@ class Server(BaseHTTPRequestHandler):
             post = json.loads(post_data)
             args_tuple=(mebibytes_to_bytes(post["mebibytes"]), post["seconds"])
             Thread(target=consume_mem, args=args_tuple).start()
-        except:
+        except Exception as e:
             logging.error("Failed to consume memory!")
-            pass
+            logging.error(e)
 
         self._set_response()
         self.wfile.write("POST request for {}".format(self.path).encode('utf-8'))
@@ -83,8 +83,10 @@ def startup_consume() -> int:
             config[key] = float(val)
         except:
             config[key] = None
-    Thread(target=consume_mem, args=(mebibytes_to_bytes(config["st_mib"]), config["st_sec"])).start()
-    Thread(target=consume_mem, args=(mebibytes_to_bytes(config["rt_mib"]), config["rt_sec"])).start()
+    st_thread = Thread(target=consume_mem, args=(mebibytes_to_bytes(config["st_mib"]), config["st_sec"]))
+    rt_thread = Thread(target=consume_mem, args=(mebibytes_to_bytes(config["rt_mib"]), config["rt_sec"]))
+    st_thread.start()
+    rt_thread.start()
 
 
 def run(server_class=HTTPServer, handler_class=Server, port=8080):
