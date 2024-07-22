@@ -26,12 +26,18 @@ import ctypes
 import gc
 import logging
 import json
+import signal
+
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread, Event
 
 
 def consume_mem(number_of_bytes: int, seconds: int | None = None):
+    if number_of_bytes <= 0:
+        logging.info(f"Consuming no bytes")
+        return
     logging.info(f"Consuming {number_of_bytes} bytes for {seconds} seconds...")
     buffer = ctypes.create_string_buffer(int(number_of_bytes))
     if seconds is None:
@@ -68,7 +74,7 @@ class Server(BaseHTTPRequestHandler):
             logging.error(e)
 
         self._set_response()
-        self.wfile.write("POST request for {}".format(self.path).encode('utf-8'))
+        self.wfile.write("POST request for {}\n".format(self.path).encode('utf-8'))
 
 
 def startup_consume() -> int:
@@ -104,9 +110,14 @@ def run(server_class=HTTPServer, handler_class=Server, port=8080):
         # TODO: implement clean termination
         os.kill(os.getpid(), 9)
 
+def sigterm_handler(_signo, _stack_frame):
+    # TODO: implement clean termination
+    os.kill(os.getpid(), 9)
 
 if __name__ == '__main__':
     from sys import argv
+
+    signal.signal(signal.SIGTERM, sigterm_handler)
 
     if len(argv) == 2:
         run(port=int(argv[1]))
